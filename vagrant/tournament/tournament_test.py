@@ -42,7 +42,7 @@ def testRegisterCountDelete():
     deleteMatches()
     deletePlayers()
     registerPlayer("Markov Chaney")
-    registerPlayer("Joe Malik")
+    registerPlayer(Z"Joe Malik")
     registerPlayer("Mao Tsu-hsi")
     registerPlayer("Atlanta Hope")
     c = countPlayers()

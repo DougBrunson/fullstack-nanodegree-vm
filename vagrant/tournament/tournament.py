@@ -4,35 +4,99 @@
 #
 
 import psycopg2
+import bleach
 
-
+# DB helper methods
 def connect():
-    """Connect to the PostgreSQL database.  Returns a database connection."""
-    return psycopg2.connect("dbname=tournament")
+    """Connect to the PostgreSQL database.  Returns a database connection.
+    Args:
+        None
+    Returns:
+        DB: connection oject
+        conn: cursor object
+    """
+    try:
+        DB = psycopg2.connect('dbname=tournament')
+        conn = DB.cursor()
+        return DB, conn
+    except Exception as e:
+        print "Database connection failed with error: " + str(e)
 
 
+def disconnect(db, commit=False):
+    """Disconnect database and commit changes if true is passed
+    Args: 
+        db: connection object
+        commit(bool): boolean commit 
+    """
+    try:
+        if commit:
+            db.commit()
+    except Exception, e:
+        db.rollback()
+        print "Database transaction failed with error: " + str(e)
+        print "\nDatabase rolled back"
+    finally:
+        db.close()
+
+# DB business logic
 def deleteMatches():
-    """Remove all the match records from the database."""
+    """Remove all the match records from the database.
+    Args: None
+    """
+
+    db, c = connect()
+    
+    query = 'DELETE FROM matches'
+    c.execute(query)
+
+    disconnect(db, commit=True)
 
 
 def deletePlayers():
-    """Remove all the player records from the database."""
+    """Remove all the player records from the database.
+    Args: None
+    """
+    db, c = connect()
 
+    query = 'delete from players'
+    c.execute(query)
+
+    disconnect(db, commit=True)
 
 def countPlayers():
-    """Returns the number of players currently registered."""
+    """Returns the number of players currently registered.
+        Args: None
+        Returns: (long) player_count
+    """
+    
+    db, c = connect()
+    query = 'select * from players'
+    c.execute(query)
+
+    # refactor if num players is large to reduce db usage 
+    player_count = len(c.fetchall())
+    disconnect(db)
+
+    return player_count
+
+
 
 
 def registerPlayer(name):
     """Adds a player to the tournament database.
-  
-    The database assigns a unique serial id number for the player.  (This
-    should be handled by your SQL database schema, not in your Python code.)
-  
     Args:
       name: the player's full name (need not be unique).
     """
-
+    db, c = connect()
+    #query = 'INSERT INTO players VALUES(%s)', (name,)
+    
+    c.execute('INSERT INTO players VALUES(default, %s)', (name,))
+    disconnect(db, True)    
+    
+#if __name__ == '__main__':
+   # print countPlayers()
+ 
 
 def playerStandings():
     """Returns a list of the players and their win records, sorted by wins.
@@ -47,7 +111,7 @@ def playerStandings():
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
-
+    
 
 def reportMatch(winner, loser):
     """Records the outcome of a single match between two players.
@@ -55,7 +119,7 @@ def reportMatch(winner, loser):
     Args:
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
-    """
+    """ 
  
  
 def swissPairings():
@@ -73,5 +137,4 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
-
 
